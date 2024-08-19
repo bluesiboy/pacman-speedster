@@ -18,11 +18,11 @@ public static class InitDataBase
 
     public static void LoadPacmanData()
     {
+        var result = ScriptTool.Run(["sudo pacman -Sy"]);
         Console.Write("Loading pacman data...");
-        // var result = ScriptTool.Run("./scripts/get-pacman.sh");
-        var result = File.ReadAllLines("/etc/pacman.conf");
-        result = result.Where(x => x.Contains('=') || x.StartsWith('[')).ToArray();
-        var pacFile = ScriptTool.Write(result);
+        var str = File.ReadAllLines("/etc/pacman.conf");
+        str = str.Where(x => x.Contains('=') || x.StartsWith('[')).ToArray();
+        var pacFile = ScriptTool.Write(str);
         var config = new ConfigurationBuilder()
             .AddIniFile(pacFile)
             .SetFileLoadExceptionHandler(ex => ex.Ignore = true)
@@ -34,11 +34,12 @@ public static class InitDataBase
             var item = new PacmanData
             {
                 Key = section.Key,
-                Value = section["Server"]?.Trim() ?? section["Include"]?.Trim()
+                Value = section["Server"]?.Trim() ?? section["Include"]?.Trim() ?? string.Empty,
             };
             item.Urls = item.Value.StartsWith("http")
                 ? [item.Value]
                 : File.ReadAllLines(item.Value)
+                    .Select(x => x.Trim())
                     .Where(x => x.Contains('=') && x.StartsWith("Server"))
                     .Select(x => x.Split('=')[1].Trim())
                     .ToArray();
@@ -74,7 +75,7 @@ public static class InitDataBase
 
 public class PacmanData
 {
-    public string Key { get; set; }
-    public string Value { get; set; }
-    public string[] Urls { get; set; }
+    public string Key { get; set; } = string.Empty;
+    public string Value { get; set; } = string.Empty;
+    public string[] Urls { get; set; } = [];
 }
