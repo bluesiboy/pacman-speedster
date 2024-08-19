@@ -7,6 +7,7 @@ namespace pacman_speedster;
 
 public static class InitDataBase
 {
+    public static bool NoPacmanSy { get; set; } = false;
     public static List<PacmanData> PacmanDatas { get; set; } = new();
     public static (string, string)[] Packages { get; set; } = [];
 
@@ -18,7 +19,8 @@ public static class InitDataBase
 
     public static void LoadPacmanData()
     {
-        var result = ScriptTool.Run(["sudo pacman -Sy"]);
+        if (!NoPacmanSy)
+            ScriptTool.Run(["sudo pacman -Sy"]);
         Console.Write("Loading pacman data...");
         var str = File.ReadAllLines("/etc/pacman.conf");
         str = str.Where(x => x.Contains('=') || x.StartsWith('[')).ToArray();

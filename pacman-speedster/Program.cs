@@ -3,8 +3,9 @@
 using pacman_speedster;
 
 Console.WriteLine("Hello, World!");
-foreach (var item in args)
+for (int i = 0; i < args.Length; i++)
 {
+    var item = args[i].Trim('\'').Trim('"');
     switch (item.ToLower())
     {
         case "--help":
@@ -17,9 +18,32 @@ foreach (var item in args)
             Console.WriteLine(" -d, --down-path\tset target output directory");
             Console.WriteLine(" -y\t\t\tpacman -Sy before download");
             Console.WriteLine(" -m, --no-move\t\tdon't move file when download completed");
+            Console.WriteLine(" -k, --skip-exist\t skip exists package");
             return;
-        default:
+        case "-c":
+        case "--max-errors":
+            if (int.TryParse(args[i + 1], out var value))
+                DownloadPackage.MaxErrorCount = value;
+            i++;
             break;
+        case "-d":
+            DownloadPackage.TmpPath = args[i + 1];
+            i++;
+            break;
+        case "-y":
+        case "--down-path":
+            InitDataBase.NoPacmanSy = true;
+            break;
+        case "-k":
+        case "--skip-exist":
+            DownloadPackage.SkipExistPackage = true;
+            break;
+        case "-m":
+        case "--no-move":
+        case "-s":
+        case "--self-sig":
+        default:
+            throw new Exception("UnSupport Argument: " + item);
     }
 }
 try

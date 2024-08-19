@@ -5,18 +5,20 @@ namespace pacman_speedster;
 
 public static class DownloadPackage
 {
-    public static List<ServerData> Servers { get; set; }
-    public static List<(string, string)> RemainingPackages { get; set; }
+    public static List<ServerData> Servers { get; set; } = [];
+    public static List<(string, string)> RemainingPackages { get; set; } = [];
     private static object _ListLock { get; } = new();
-    public static int MaxErrorCount { get; } = 10;
-    public static string TmpPath { get; set; }
-    public static IHttpClientFactory HttpClientFactory { get; set; }
+    public static int MaxErrorCount { get; set; } = 10;
+    public static bool SkipExistPackage { get;set;} = false;
+    public static string TmpPath { get; set; } = Path.Combine(Path.GetTempPath(), "pacman_speester");
+    public static IHttpClientFactory? HttpClientFactory { get; set; }
 
     public static void Start()
     {
-        TmpPath = Path.GetTempPath() + "pacman_speester";
         Console.WriteLine("Target Path: " + TmpPath);
-        Directory.CreateDirectory(TmpPath);
+        if (!Directory.Exists(TmpPath))
+            Directory.CreateDirectory(TmpPath);
+        File.WriteAllText(Path.Combine(TmpPath, "test_write.log"), Guid.NewGuid().ToString());
         Console.WriteLine("Downloading package...");
         Servers = InitDataBase.PacmanDatas.SelectMany(x =>
                 x.Urls.Select(c => new ServerData { Url = c, Key = x.Key }))
@@ -88,7 +90,7 @@ public static class DownloadPackage
 
     public static async Task DownAsync(string clientName, string url, string destinationFilePath)
     {
-        using var client = HttpClientFactory.CreateClient(clientName);
+        using var client = HttpClientFactory!.CreateClient(clientName);
         var response = await client.GetAsync(url);
         response.EnsureSuccessStatusCode();
         await using var fileStream =
